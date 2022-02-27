@@ -5,6 +5,7 @@ const dotEnv = require('dotenv');
 const {tasks, users} = require("./constants");
 const uuid = require('uuid');
 
+const resolvers = require('./graphql/resolvers/rootResolvers')
 
 // set env variables
 dotEnv.config();
@@ -50,7 +51,7 @@ const typeDefs = gql`
         tasks:[Task!]
     },
 
- 
+
     type Task{
         id:ID!,
         name:String!,
@@ -58,62 +59,15 @@ const typeDefs = gql`
         user:User!
 
     }
-    
+
 
 `
-
-/*
- type Task{
-        id:ID!,
-        name:String!,
-        completed:Boolean!
-        user:User! // user name is different so a field label reoolvers must be nammed.
-
-    }
-    name must be same as
-  { id: "1", name: "Work", completed: false, userId: "3" },
-
- */
-const resolvers = {
-    Query: {
-        greet: () => "HELLO WORLD",
-        //  greet:String!, has to be here. alongside Greet.
-        tasks: () => tasks,
-        task: (_, args) => tasks.find(task => task.id === args.id),
-        users: () => users,
-        user: (_, {id}) => users.find(user => user.id === id)
-
-
-    },
-
-
-
-        Task: {
-            // Task is the object.
-            user: (parent) => users.find(user => user.id === parent.userId),
-
-
-            // parent will hold individal task object,
-        },
-        User: {
-            tasks: (parent) => tasks.filter(task => task.userId === parent.id)
-        },
-    Mutation:{
-        createTask:(_,{input}) =>{
-            const task = {...input,id:uuid.v4()}
-            tasks.push(task);
-            return task;
-        }
-    }
-
-}
-
 
 
 async function startServer() {
     const apolloServer = new ApolloServer({
         typeDefs,
-        resolvers
+       resolvers
     });
     await apolloServer.start()
     apolloServer.applyMiddleware({app, path: '/graphql'});
